@@ -548,3 +548,72 @@ h1 {
     border-color: var(--amber);
     color: #2b1f00;
 }
+
+#trip-control-button {
+    margin-left: 18px;
+    margin-right: 18px;
+    width: calc(100% - 36px);
+}
+
+#trip-control-button.is-active {
+    background: var(--danger);
+    color: #350b12;
+}
+
+#trip-control-button.is-active:hover {
+    background: #ff777e;
+}
+
+.route-modal {
+    max-width: 560px;
+}
+
+.route-options {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.frequent-route-list {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.frequent-route-btn {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+    cursor: pointer;
+    min-height: 48px;
+    padding: 10px 8px;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.frequent-route-btn:hover {
+    border-color: var(--teal);
+}
+
+.frequent-route-btn:active {
+    transform: translateY(1px);
+}
+
+.route-form {
+    display: grid;
+    gap: 2px;
+}
+
+@media (max-width: 440px) {
+    .frequent-route-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 680px) {
+    #trip-control-button {
+        margin-left: 28px;
+        margin-right: 28px;
+        width: calc(100% - 56px);
+    }
+}

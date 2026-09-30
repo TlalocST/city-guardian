@@ -114,6 +114,11 @@
                 <button id="recenter-button" class="map-control" type="button" aria-label="Centrar en mi ubicación" title="Centrar en mi ubicación">◎</button>
             </div>
 
+            <button id="trip-control-button" class="button button-primary" type="button" style="margin-bottom: 12px;">
+                <span aria-hidden="true">🚀</span>
+                <span><strong>Iniciar recorrido</strong><small id="trip-control-label">Seleccionar destino</small></span>
+            </button>
+
             <section class="trip-info" aria-label="Estado del recorrido">
                 <div>
                     <p class="eyebrow">Monitoreo activo</p>
@@ -173,6 +178,36 @@
             </form>
 
             <button id="logout-button" class="button button-secondary" type="button">Cerrar sesión</button>
+        </section>
+    </div>
+
+    <div id="route-modal" class="modal-backdrop is-hidden" role="presentation">
+        <section class="profile-modal route-modal" role="dialog" aria-modal="true" aria-labelledby="route-title">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">Monitoreo de ruta</p>
+                    <h2 id="route-title">Iniciar un nuevo recorrido</h2>
+                </div>
+                <button id="close-route-button" class="close-button" type="button" aria-label="Cerrar selección de ruta">×</button>
+            </div>
+
+            <div class="route-options">
+                <p class="eyebrow">Rutas frecuentes</p>
+                <div class="frequent-route-list">
+                    <button class="frequent-route-btn" type="button" data-destination="Universidad Nacional Autónoma de México, Ciudad de México">Escuela / Universidad</button>
+                    <button class="frequent-route-btn" type="button" data-destination="Casa, Ciudad de México">Casa</button>
+                    <button class="frequent-route-btn" type="button" data-destination="Trabajo, Ciudad de México">Trabajo</button>
+                </div>
+            </div>
+
+            <form id="route-form" class="route-form" novalidate>
+                <label class="field">
+                    <span>Destino</span>
+                    <input id="destination-input" type="text" placeholder="Ingresa una dirección o destino" autocomplete="street-address" required>
+                </label>
+                <button class="button button-primary" type="submit">Trazar Ruta <span aria-hidden="true">→</span></button>
+                <p id="route-message" class="form-message" role="alert"></p>
+            </form>
         </section>
     </div>
 

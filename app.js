@@ -41,12 +41,21 @@ function bindEvents() {
     document.getElementById("profile-form").addEventListener("submit", guardarPerfil);
     document.getElementById("panic-button").addEventListener("click", enviarAlertaPanic);
     document.getElementById("zones-button").addEventListener("click", toggleZonasCriticas);
+    document.getElementById("trip-control-button").addEventListener("click", manejarControlRecorrido);
+    document.getElementById("route-form").addEventListener("submit", manejarFormularioRuta);
+    document.getElementById("close-route-button").addEventListener("click", cerrarModalRuta);
+    document.querySelectorAll(".frequent-route-btn").forEach(button => {
+        button.addEventListener("click", () => trazarRuta(button.dataset.destination));
+    });
     document.getElementById("recenter-button").addEventListener("click", centrarMapa);
     document.getElementById("profile-button").addEventListener("click", abrirPerfil);
     document.getElementById("close-profile-button").addEventListener("click", cerrarPerfil);
     document.getElementById("logout-button").addEventListener("click", cerrarSesion);
     document.getElementById("profile-modal").addEventListener("click", event => {
         if (event.target.id === "profile-modal") cerrarPerfil();
+    });
+    document.getElementById("route-modal").addEventListener("click", event => {
+        if (event.target.id === "route-modal") cerrarModalRuta();
     });
 }
 
@@ -168,6 +177,8 @@ function mostrarDashboard() {
 
 function cerrarSesion() {
     stopLocationTracking();
+    finalizarRuta();
+    cerrarModalRuta();
     activeUser = null;
     localStorage.removeItem(STORAGE.session);
     localStorage.removeItem("cg_usuario");
@@ -240,7 +251,7 @@ function loadLeafletMap() {
 
     mapInstance.on("click", event => {
         if (!currentPosition) {
-            showDashboardMessage("Espera a que se detecte tu ubicación antes de elegir un destino.");
+            showDashboardMessage("Espera a que se detecte tu ubicaciï¿½n antes de elegir un destino.");
             return;
         }
         if (routeControl) mapInstance.removeControl(routeControl);
@@ -266,12 +277,12 @@ function loadLeafletMap() {
         };
         if (!locationMarker) locationMarker = L.marker(event.latlng, { title: "Punto de partida" }).addTo(mapInstance).bindPopup("Punto de partida");
         else locationMarker.setLatLng(event.latlng);
-        setLocationStatus("Ubicación en vivo", true);
-        document.getElementById("coordinates").textContent = `${currentPosition.lat.toFixed(5)}, ${currentPosition.lng.toFixed(5)} · ±${currentPosition.accuracy} m`;
+        setLocationStatus("Ubicaciï¿½n en vivo", true);
+        document.getElementById("coordinates").textContent = `${currentPosition.lat.toFixed(5)}, ${currentPosition.lng.toFixed(5)} ï¿½ ï¿½${currentPosition.accuracy} m`;
         actualizarZonasCercanas(currentPosition.lat, currentPosition.lng);
     });
     mapInstance.on("locationerror", event => {
-        setLocationStatus(event.message || "Ubicación no disponible.", false);
+        setLocationStatus(event.message || "Ubicaciï¿½n no disponible.", false);
     });
     mapInstance.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true });
     if (currentPosition) updateMapPosition();
