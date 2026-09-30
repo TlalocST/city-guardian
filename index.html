@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#09131f">
     <meta name="description" content="Rumbo Seguro: monitoreo de ubicación y asistencia durante tus viajes.">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
     <link rel="stylesheet" href="styles.css">
     <title>Rumbo Seguro</title>
 </head>
@@ -104,13 +106,7 @@
             </header>
 
             <div class="map-wrap">
-                <div id="map" class="map-canvas" aria-label="Mapa de tu ubicación actual">
-                    <div id="map-placeholder" class="map-placeholder">
-                        <div class="placeholder-icon" aria-hidden="true">⌖</div>
-                        <strong>Mapa listo para conectarse</strong>
-                        <p>Agrega tu clave restringida de Google Maps para ver tu ubicación.</p>
-                    </div>
-                </div>
+                <div id="map" class="map-canvas" aria-label="Mapa interactivo para trazar tu ruta"></div>
                 <div class="map-status" id="location-status" role="status">
                     <span class="status-dot"></span>
                     <span>Solicitando ubicación…</span>
@@ -181,6 +177,8 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="app.js"></script>
     <script>
         if ("serviceWorker" in navigator) {

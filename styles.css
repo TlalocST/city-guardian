@@ -302,14 +302,13 @@ h1 {
 }
 
 .map-wrap {
-    min-height: min(61vh, 600px);
+    height: 100vh;
     position: relative;
 }
 
 .map-canvas {
     background: #c9d3d4;
-    height: min(61vh, 600px);
-    min-height: 380px;
+    height: 100vh;
     overflow: hidden;
     position: relative;
     width: 100%;

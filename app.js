@@ -23,7 +23,7 @@ let currentPosition = null;
 let locationWatchId = null;
 let mapInstance = null;
 let locationMarker = null;
-let mapsLoadPromise = null;
+let routeControl = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("app-version").textContent = config.APP_VERSION || "0.3.0";
@@ -163,7 +163,7 @@ function mostrarDashboard() {
     document.getElementById("call-label").textContent = config.EMERGENCY_PHONE || "911";
     fillProfileForm();
     startLocationTracking();
-    loadGoogleMap();
+    loadLeafletMap();
 }
 
 function cerrarSesion() {
@@ -210,7 +210,6 @@ function updateLocation(position) {
     setLocationStatus("Ubicaci√≥n en vivo", true);
     document.getElementById("coordinates").textContent = `${currentPosition.lat.toFixed(5)}, ${currentPosition.lng.toFixed(5)} ¬∑ ¬±${currentPosition.accuracy} m`;
     updateMapPosition();
-
     actualizarZonasCercanas(currentPosition.lat, currentPosition.lng);
 }
 
@@ -229,73 +228,62 @@ function setLocationStatus(text, live) {
     status.querySelector(".status-dot").classList.toggle("is-live", live);
 }
 
-async function loadGoogleMap() {
-    const placeholder = document.getElementById("map-placeholder"); //[cite: 4]
+function loadLeafletMap() {
+    if (!window.L || mapInstance) return;
 
-    if (!config.GOOGLE_MAPS_API_KEY) { //[cite: 2, 3]
-        if (placeholder) placeholder.classList.remove("is-hidden"); //[cite: 2, 4]
-        return;
-    }
+    const initialPosition = currentPosition || defaultPosition;
+    mapInstance = L.map("map").setView([initialPosition.lat, initialPosition.lng], currentPosition ? 16 : 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: 19
+    }).addTo(mapInstance);
 
-    try {
-        await loadMapsScript(); //[cite: 2]
-        const { Map } = await window.google.maps.importLibrary("maps"); //[cite: 2]
-        const initialPosition = currentPosition || defaultPosition; //[cite: 2]
-
-        // Ocultamos el placeholder ANTES de inicializar el mapa para no perder su referencia[cite: 2, 4]
-        if (placeholder) placeholder.classList.add("is-hidden"); //[cite: 2, 4]
-
-        mapInstance = new Map(document.getElementById("map"), { //[cite: 2, 4]
-            center: initialPosition, //[cite: 2]
-            zoom: currentPosition ? 17 : 12, //[cite: 2]
-            disableDefaultUI: true, //[cite: 2]
-            zoomControl: true, //[cite: 2]
-            fullscreenControl: false, //[cite: 2]
-            streetViewControl: false, //[cite: 2]
-            clickableIcons: false, //[cite: 2]
-            mapTypeControl: false //[cite: 2]
-        });
-
-        locationMarker = new window.google.maps.Marker({ //[cite: 2]
-            map: mapInstance, //[cite: 2]
-            position: initialPosition, //[cite: 2]
-            title: "Tu ubicaci√≥n" //[cite: 2]
-        });
-        updateMapPosition(); //[cite: 2]
-    } catch (error) {
-        console.error("No se pudo cargar Google Maps:", error); //[cite: 2]
-        if (placeholder) placeholder.classList.remove("is-hidden"); //[cite: 2, 4]
-        showDashboardMessage("No se pudo cargar el mapa. Revisa la clave y las restricciones de Google Maps."); //[cite: 2]
-    }
-}
-
-
-
-function loadMapsScript() {
-    if (window.google?.maps?.importLibrary) return Promise.resolve();
-    if (mapsLoadPromise) return mapsLoadPromise;
-
-    mapsLoadPromise = new Promise((resolve, reject) => {
-        window.__rumboSeguroMapsReady = resolve;
-        const script = document.createElement("script");
-        script.async = true;
-        script.defer = true;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(config.GOOGLE_MAPS_API_KEY)}&v=weekly&loading=async&callback=__rumboSeguroMapsReady`;
-        script.onerror = () => reject(new Error("Google Maps no respondi√≥"));
-        document.head.appendChild(script);
+    mapInstance.on("click", event => {
+        if (!currentPosition) {
+            showDashboardMessage("Espera a que se detecte tu ubicaciÛn antes de elegir un destino.");
+            return;
+        }
+        if (routeControl) mapInstance.removeControl(routeControl);
+        routeControl = L.Routing.control({
+            waypoints: [
+                L.latLng(currentPosition.lat, currentPosition.lng),
+                event.latlng
+            ],
+            routeWhileDragging: false,
+            show: false,
+            addWaypoints: false,
+            createMarker: (index, waypoint, count) => L.marker(waypoint.latLng).bindPopup(index === 0 ? "Punto de partida" : "Destino")
+        }).addTo(mapInstance);
     });
 
-    return mapsLoadPromise;
+    mapInstance.on("locationfound", event => {
+        currentPosition = {
+            lat: event.latlng.lat,
+            lng: event.latlng.lng,
+            accuracy: Math.round(event.accuracy),
+            speed: 0,
+            capturedAt: new Date().toISOString()
+        };
+        if (!locationMarker) locationMarker = L.marker(event.latlng, { title: "Punto de partida" }).addTo(mapInstance).bindPopup("Punto de partida");
+        else locationMarker.setLatLng(event.latlng);
+        setLocationStatus("UbicaciÛn en vivo", true);
+        document.getElementById("coordinates").textContent = `${currentPosition.lat.toFixed(5)}, ${currentPosition.lng.toFixed(5)} ∑ ±${currentPosition.accuracy} m`;
+        actualizarZonasCercanas(currentPosition.lat, currentPosition.lng);
+    });
+    mapInstance.on("locationerror", event => {
+        setLocationStatus(event.message || "UbicaciÛn no disponible.", false);
+    });
+    mapInstance.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true });
+    if (currentPosition) updateMapPosition();
 }
 
 function updateMapPosition() {
-    // Validamos tambi√©n locationMarker para evitar el error de setPosition null[cite: 2]
-    if (!currentPosition || !mapInstance || !locationMarker) return; //[cite: 2]
-    const position = { lat: currentPosition.lat, lng: currentPosition.lng }; //[cite: 2]
-    locationMarker.setPosition(position); //[cite: 2]
-    mapInstance.panTo(position); //[cite: 2]
+    if (!currentPosition || !mapInstance) return;
+    const position = [currentPosition.lat, currentPosition.lng];
+    if (!locationMarker) locationMarker = L.marker(position, { title: "Punto de partida" }).addTo(mapInstance).bindPopup("Punto de partida");
+    else locationMarker.setLatLng(position);
+    mapInstance.panTo(position);
 }
-
 function centrarMapa() {
     if (currentPosition && mapInstance) {
         mapInstance.panTo({ lat: currentPosition.lat, lng: currentPosition.lng });
@@ -482,7 +470,7 @@ function toggleZonasCriticas() {
 }
 
 function limpiarZonas() {
-    zonasDibujadas.forEach(circle => circle.setMap(null));
+    zonasDibujadas.forEach(circle => mapInstance.removeLayer(circle));
     zonasDibujadas = [];
 }
 
@@ -512,16 +500,13 @@ function actualizarZonasCercanas(userLat = currentPosition?.lat, userLng = curre
 
         // Dibuja en el mapa si la zona est√° a menos de 10 km del usuario
         if (distanciaKm <= 10.0) {
-            const circle = new google.maps.Circle({
-                strokeColor: "#FF2D55",
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
+            const circle = L.circle([zona.lat, zona.lng], {
+                color: "#FF2D55",
+                weight: 2,
                 fillColor: "#FF2D55",
                 fillOpacity: 0.35,
-                map: mapInstance,
-                center: { lat: zona.lat, lng: zona.lng },
                 radius: zona.radio
-            });
+            }).addTo(mapInstance);
 
             zonasDibujadas.push(circle);
 
